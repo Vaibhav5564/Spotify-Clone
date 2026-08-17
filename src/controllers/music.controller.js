@@ -1,56 +1,95 @@
 const musicModel = require('../models/music.model');
-const { uploadFile } = require('../services/storage.service');
-const jwt = require('jsonwebtoken');
+const albumModel = require('../models/album.model');
+const uploadFile = require('../services/storage.service');
 
 async function createMusic(req, res) {
-    const token = req.cookies.token;
-
-    if (!token) {
-        return res.status(401).json({
-            message: "Unauthorized"
-        });
-    }
-
-    let decoded;
-
     try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const { title } = req.body;
+        const file = req.file;
 
-        if (decoded.role !== "artist") {
-            return res.status(403).json({
-                message: "You don't have access to create music"
+        if (!title) {
+            return res.status(400).json({
+                message: 'Music title is required'
             });
         }
-    } catch (err) {
-        return res.status(401).json({
-            message: "Unauthorized"
+
+        if (!file) {
+            return res.status(400).json({
+                message: 'Music file is required'
+            });
+        }
+
+        const result = await uploadFile(
+            file.buffer.toString('base64')
+        );
+
+        const music = await musicModel.create({
+            uri: result.url,
+            title,
+            artist: req.user.id
+        });
+
+        return res.status(201).json({
+            message: 'Music Created Successfully',
+            music: {
+                id: music._id,
+                uri: music.uri,
+                title: music.title,
+                artist: music.artist
+            }
+        });
+    } catch (error) {
+        console.error('Create music error:', error);
+
+        return res.status(500).json({
+            message: 'Failed to create music',
+            error: error.message
         });
     }
+}
 
-    const { title } = req.body;
-    const file = req.file;
+async function createAlbum(req, res) {
+    try {
+        const { title, musics } = req.body;
 
-    const result = await uploadFile(
-        file.buffer.toString('base64')
-    );
-
-    const music = await musicModel.create({
-        uri: result.url,
-        title,
-        artist: decoded.id
-    });
-
-    res.status(201).json({
-        message: "Music Created Successfully",
-        music: {
-            id: music._id,
-            uri: music.uri,
-            title: music.title,
-            artist: music.artist
+        if (!title) {
+            return res.status(400).json({
+                message: 'Album title is required'
+            });
         }
-    });
+
+        if (!Array.isArray(musics) || musics.length === 0) {
+            return res.status(400).json({
+                message: 'At least one music ID is required'
+            });
+        }
+
+        const album = await albumModel.create({
+            title,
+            artist: req.user.id,
+            musics
+        });
+
+        return res.status(201).json({
+            message: 'Album created successfully',
+            album: {
+                id: album._id,
+                title: album.title,
+                artist: album.artist,
+                musics: album.musics
+            }
+        });
+    } catch (error) {
+        console.error('Create album error:', error);
+
+        return res.status(500).json({
+            message: 'Failed to create album',
+            error: error.message
+        });
+    }
 }
 
 module.exports = {
-    createMusic
+    createMusic,
+    createAlbum
 };
