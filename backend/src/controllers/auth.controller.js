@@ -47,7 +47,6 @@ async function registerUser(req, res) {
 
 }
 
-
 async function loginUser(req, res) {
     const { userName, email, password } = req.body;
 
@@ -89,4 +88,12 @@ async function loginUser(req, res) {
     })
 }
 
-module.exports = { registerUser, loginUser }
+async function logoutUser(req, res){
+    
+    res.clearCookie("token")
+    
+    res.status(200).json({message: "User logged out successfully !!"})
+
+}
+
+module.exports = { registerUser, loginUser, logoutUser }
