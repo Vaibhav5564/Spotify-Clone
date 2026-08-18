@@ -1,24 +1,30 @@
-const express = require('express');
-const cookieParser = require('cookie-parser');
-const cors = require('cors');
+const express = require("express");
+const cookieParser = require("cookie-parser");
+const cors = require("cors");
 
-const authRoutes = require('./routes/auth.routes');
-const musicRoutes = require('./routes/music.route');
+const authRoutes = require("./routes/auth.routes");
+const musicRoutes = require("./routes/music.route");
 
 const app = express();
 
 app.use(
-    cors({
-        origin: process.env.CLIENT_URL,
-        credentials: true
-    })
+  cors({
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    credentials: true,
+  })
 );
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-app.use('/api/auth', authRoutes);
-app.use('/api/music', musicRoutes);
+app.get("/", (req, res) => {
+  res.status(200).json({
+    message: "Spotify Clone API is running",
+  });
+});
+
+app.use("/api/auth", authRoutes);
+app.use("/api/music", musicRoutes);
 
 module.exports = app;

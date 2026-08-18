@@ -4,7 +4,8 @@ import api from "../services/api";
 import { PlayerContext } from "../context/PlayerContext";
 
 function Songs() {
-  const { currentSong, playSong } = useContext(PlayerContext);
+  const { currentSong, isPlaying, toggleSong } =
+    useContext(PlayerContext);
 
   const [musics, setMusics] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +15,6 @@ function Songs() {
     async function getMusics() {
       try {
         const response = await api.get("/music");
-
         setMusics(response.data.musics || []);
       } catch (error) {
         setMessage(
@@ -35,7 +35,7 @@ function Songs() {
   return (
     <main>
       <h1>All Songs</h1>
-      <br></br><br></br>
+      <br></br>
 
       {message && <p>{message}</p>}
 
@@ -43,31 +43,41 @@ function Songs() {
         <p>No songs available.</p>
       ) : (
         <section>
-          {musics.map((music) => (
-            <article
-              key={music._id}
-              className={
-                currentSong?._id === music._id
-                  ? "song-card active-song"
-                  : "song-card"
-              }
-            >
-              <h3>{music.title}</h3>
+          {musics.map((music) => {
+            const isCurrentSong = currentSong?._id === music._id;
+            const isCurrentSongPlaying = isCurrentSong && isPlaying;
 
-              <p>
-                Artist: {music.artist?.userName || "Unknown artist"}
-              </p>
-
-              <button
-                type="button"
-                onClick={() => playSong(music)}
+            return (
+              <article
+                key={music._id}
+                className={
+                  isCurrentSong
+                    ? "song-card active-song"
+                    : "song-card"
+                }
               >
-                {currentSong?._id === music._id
-                  ? "Playing"
-                  : "Play Song"}
-              </button>
-            </article>
-          ))}
+                <h3>{music.title}</h3>
+
+                <h4>
+                  Artist:{" "}
+                  {music.artist?.userName || "Unknown artist"}
+                </h4>
+                <br></br>
+
+                <button
+                  type="button"
+                  className={
+                    isCurrentSongPlaying
+                      ? "song-play-button pause-button"
+                      : "song-play-button"
+                  }
+                  onClick={() => toggleSong(music)}
+                >
+                  {isCurrentSongPlaying ? "Pause" : "Play Song"}
+                </button>
+              </article>
+            );
+          })}
         </section>
       )}
     </main>

@@ -90,16 +90,25 @@ async function createAlbum(req, res) {
 }
 
 async function getAllMusics(req, res) {
+  try {
     const musics = await musicModel
-    .find()
-    .skip(0)
-    .limit(20)
-    .populate("artist", "userName email")
+      .find()
+      .sort({ _id: -1 })
+      .limit(50)
+      .populate("artist", "userName email");
 
-    res.status(200).json({
-        message: "Musics fetched successfully",
-        musics: musics
-    })
+    return res.status(200).json({
+      message: "Musics fetched successfully",
+      musics,
+    });
+  } catch (error) {
+    console.error("Get all musics error:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch musics",
+      error: error.message,
+    });
+  }
 }
 
 async function getAllAlbums(req, res) {
@@ -114,16 +123,39 @@ async function getAllAlbums(req, res) {
     })
 }
 
-async function getAlbumById(req, res){
-    
+async function getAlbumById(req, res) {
+  try {
     const albumId = req.params.albumId;
-    
-    const album = await albumModel.findById(albumId).populate("artist", "userName email")
+
+    const album = await albumModel
+      .findById(albumId)
+      .populate("artist", "userName email")
+      .populate({
+        path: "musics",
+        populate: {
+          path: "artist",
+          select: "userName email",
+        },
+      });
+
+    if (!album) {
+      return res.status(404).json({
+        message: "Album not found",
+      });
+    }
 
     return res.status(200).json({
-        message: "Album fetched successfully",
-        album: album
-    })
+      message: "Album fetched successfully",
+      album,
+    });
+  } catch (error) {
+    console.error("Get album error:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch album",
+      error: error.message,
+    });
+  }
 }
 
 module.exports = {

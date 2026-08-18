@@ -3,7 +3,13 @@ import { useContext } from "react";
 import { PlayerContext } from "../context/PlayerContext";
 
 function AudioPlayer() {
-  const { currentSong } = useContext(PlayerContext);
+  const {
+    currentSong,
+    audioRef,
+    handlePlay,
+    handlePause,
+    handleEnded,
+  } = useContext(PlayerContext);
 
   return (
     <footer className="audio-player">
@@ -20,21 +26,19 @@ function AudioPlayer() {
         </div>
       </div>
 
-      {currentSong ? (
-        <audio
-          key={currentSong._id}
-          className="player-controls"
-          controls
-          autoPlay
-          src={currentSong.uri}
-        >
-          Your browser does not support the audio element.
-        </audio>
-      ) : (
-        <audio className="player-controls" controls>
-          Your browser does not support the audio element.
-        </audio>
-      )}
+      <audio
+        ref={audioRef}
+        key={currentSong?._id || "empty-player"}
+        className="player-controls"
+        controls
+        autoPlay={Boolean(currentSong)}
+        src={currentSong?.uri || undefined}
+        onPlay={handlePlay}
+        onPause={handlePause}
+        onEnded={handleEnded}
+      >
+        Your browser does not support audio playback.
+      </audio>
     </footer>
   );
 }

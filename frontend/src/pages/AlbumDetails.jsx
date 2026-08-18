@@ -6,7 +6,9 @@ import { PlayerContext } from "../context/PlayerContext";
 
 function AlbumDetails() {
   const { albumId } = useParams();
-  const { currentSong, playSong } = useContext(PlayerContext);
+
+  const { currentSong, isPlaying, toggleSong } =
+    useContext(PlayerContext);
 
   const [album, setAlbum] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,7 +17,9 @@ function AlbumDetails() {
   useEffect(() => {
     async function getAlbumDetails() {
       try {
-        const response = await api.get(`/music/albums/${albumId}`);
+        const response = await api.get(
+          `/music/albums/${albumId}`
+        );
 
         setAlbum(response.data.album);
       } catch (error) {
@@ -47,34 +51,44 @@ function AlbumDetails() {
       <h1>{album.title}</h1>
       <br></br>
 
-      <h4>
+      <h3>
         Artist: {album.artist?.userName || "Unknown artist"}
-      </h4>
-      <br></br>
-
+      </h3>
+        <br></br>
       <section>
         {album.musics?.length > 0 ? (
-          album.musics.map((music) => (
-            <article
-              key={music._id}
-              className={
-                currentSong?._id === music._id
-                  ? "song-card active-song"
-                  : "song-card"
-              }
-            >
-              <h3>{music.title}</h3>
+          album.musics.map((music) => {
+            const isCurrentSong =
+              currentSong?._id === music._id;
 
-              <button
-                type="button"
-                onClick={() => playSong(music)}
+            const isCurrentSongPlaying =
+              isCurrentSong && isPlaying;
+
+            return (
+              <article
+                key={music._id}
+                className={
+                  isCurrentSong
+                    ? "song-card active-song"
+                    : "song-card"
+                }
               >
-                {currentSong?._id === music._id
-                  ? "Playing"
-                  : "Play Song"}
-              </button>
-            </article>
-          ))
+                <h3>{music.title}</h3>
+
+                <button
+                  type="button"
+                  className={
+                    isCurrentSongPlaying
+                      ? "song-play-button pause-button"
+                      : "song-play-button"
+                  }
+                  onClick={() => toggleSong(music)}
+                >
+                  {isCurrentSongPlaying ? "Pause" : "Play Song"}
+                </button>
+              </article>
+            );
+          })
         ) : (
           <p>No songs available in this album.</p>
         )}

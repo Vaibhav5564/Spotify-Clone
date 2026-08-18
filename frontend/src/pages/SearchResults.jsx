@@ -1,12 +1,22 @@
-import { useContext, useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import {
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  Link,
+  useSearchParams,
+} from "react-router-dom";
 
 import api from "../services/api";
 import { PlayerContext } from "../context/PlayerContext";
 
 function SearchResults() {
   const [searchParams] = useSearchParams();
-  const { currentSong, playSong } = useContext(PlayerContext);
+
+  const { currentSong, isPlaying, toggleSong } =
+    useContext(PlayerContext);
 
   const searchText = searchParams.get("q")?.trim() || "";
 
@@ -21,10 +31,11 @@ function SearchResults() {
         setLoading(true);
         setMessage("");
 
-        const [musicResponse, albumResponse] = await Promise.all([
-          api.get("/music"),
-          api.get("/music/albums"),
-        ]);
+        const [musicResponse, albumResponse] =
+          await Promise.all([
+            api.get("/music"),
+            api.get("/music/albums"),
+          ]);
 
         setMusics(musicResponse.data.musics || []);
         setAlbums(albumResponse.data.albums || []);
@@ -44,11 +55,15 @@ function SearchResults() {
   const normalizedSearch = searchText.toLowerCase();
 
   const filteredMusics = musics.filter((music) =>
-    music.title?.toLowerCase().includes(normalizedSearch)
+    music.title
+      ?.toLowerCase()
+      .includes(normalizedSearch)
   );
 
   const filteredAlbums = albums.filter((album) =>
-    album.title?.toLowerCase().includes(normalizedSearch)
+    album.title
+      ?.toLowerCase()
+      .includes(normalizedSearch)
   );
 
   if (loading) {
@@ -66,7 +81,7 @@ function SearchResults() {
       {message && <p>{message}</p>}
 
       {!searchText && (
-        <p>Enter a song name or album name in the search bar.</p>
+        <p>Enter a song or album name in the search bar.</p>
       )}
 
       {searchText && (
@@ -78,32 +93,46 @@ function SearchResults() {
               <p>No matching songs found.</p>
             ) : (
               <div className="search-grid">
-                {filteredMusics.map((music) => (
-                  <article
-                    key={music._id}
-                    className={
-                      currentSong?._id === music._id
-                        ? "song-card active-song"
-                        : "song-card"
-                    }
-                  >
-                    <h3>{music.title}</h3>
+                {filteredMusics.map((music) => {
+                  const isCurrentSong =
+                    currentSong?._id === music._id;
 
-                    <p>
-                      Artist:{" "}
-                      {music.artist?.userName || "Unknown artist"}
-                    </p>
+                  const isCurrentSongPlaying =
+                    isCurrentSong && isPlaying;
 
-                    <button
-                      type="button"
-                      onClick={() => playSong(music)}
+                  return (
+                    <article
+                      key={music._id}
+                      className={
+                        isCurrentSong
+                          ? "song-card active-song"
+                          : "song-card"
+                      }
                     >
-                      {currentSong?._id === music._id
-                        ? "Playing"
-                        : "Play Song"}
-                    </button>
-                  </article>
-                ))}
+                      <h3>{music.title}</h3>
+
+                      <p>
+                        Artist:{" "}
+                        {music.artist?.userName ||
+                          "Unknown artist"}
+                      </p>
+
+                      <button
+                        type="button"
+                        className={
+                          isCurrentSongPlaying
+                            ? "song-play-button pause-button"
+                            : "song-play-button"
+                        }
+                        onClick={() => toggleSong(music)}
+                      >
+                        {isCurrentSongPlaying
+                          ? "Pause"
+                          : "Play Song"}
+                      </button>
+                    </article>
+                  );
+                })}
               </div>
             )}
           </section>
@@ -116,7 +145,10 @@ function SearchResults() {
             ) : (
               <div className="search-grid">
                 {filteredAlbums.map((album) => (
-                  <article className="album-card" key={album._id}>
+                  <article
+                    className="album-card"
+                    key={album._id}
+                  >
                     <div className="album-card-content">
                       <div className="album-icon">♪</div>
 
@@ -124,7 +156,8 @@ function SearchResults() {
 
                       <p>
                         Artist:{" "}
-                        {album.artist?.userName || "Unknown artist"}
+                        {album.artist?.userName ||
+                          "Unknown artist"}
                       </p>
 
                       <Link
