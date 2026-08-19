@@ -28,25 +28,33 @@ function Navbar() {
       setLoading(true);
 
       await api.post("/auth/logout");
-
-      logout();
-      navigate("/login");
     } catch (error) {
       console.error(
-        error.response?.data?.message || "Logout failed"
+        "Logout API error:",
+        error.response?.data?.message || error.message
       );
     } finally {
+      // Always clear the frontend authentication state
+      logout();
+
       setLoading(false);
+
+      // Always send the user to login
+      navigate("/login", { replace: true });
     }
   }
 
   function handleLogoClick() {
     if (!isAuthenticated) {
-      navigate("/");
+      navigate("/login");
       return;
     }
 
-    navigate(user?.role === "artist" ? "/artist-home" : "/user-home");
+    navigate(
+      user?.role === "artist"
+        ? "/artist-home"
+        : "/user-home"
+    );
   }
 
   return (
@@ -60,21 +68,30 @@ function Navbar() {
       </button>
 
       {isAuthenticated && (
-        <form className="navbar-search" onSubmit={handleSearch}>
+        <form
+          className="navbar-search"
+          onSubmit={handleSearch}
+        >
           <input
             type="search"
             placeholder="Search songs and albums..."
             value={searchText}
-            onChange={(event) => setSearchText(event.target.value)}
+            onChange={(event) =>
+              setSearchText(event.target.value)
+            }
           />
 
-          <button type="submit">Search</button>
+          <button type="submit">
+            Search
+          </button>
         </form>
       )}
 
       {isAuthenticated && (
         <div className="navbar-account">
-          <span className="navbar-user">{user?.userName}</span>
+          <span className="navbar-user">
+            {user?.userName}
+          </span>
 
           <button
             type="button"
@@ -82,7 +99,9 @@ function Navbar() {
             onClick={handleLogout}
             disabled={loading}
           >
-            {loading ? "Logging out..." : "Logout"}
+            {loading
+              ? "Logging out..."
+              : "Logout"}
           </button>
         </div>
       )}
