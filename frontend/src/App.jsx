@@ -1,9 +1,14 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+
 import AboutProject from "./pages/AboutProject";
 import MainLayout from "./layouts/MainLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProjectGuide from "./pages/ProjectGuide";
-import Home from "./pages/Home";
 import UserHome from "./pages/UserHome";
 import ArtistHome from "./pages/ArtistHome";
 import Login from "./pages/Login";
@@ -21,7 +26,10 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<MainLayout />}>
-          <Route path="/" element={<Home />} />
+          <Route
+            path="/"
+            element={<Navigate to="/login" replace />}
+          />
 
           <Route
             path="/user-home"
@@ -31,14 +39,16 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
-              path="/about-project"
-              element={
-                <ProtectedRoute allowedRoles={["user", "artist"]}>
-                  <AboutProject />
-                </ProtectedRoute>
-              }
-            />
+            path="/about-project"
+            element={
+              <ProtectedRoute allowedRoles={["user", "artist"]}>
+                <AboutProject />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/artist-home"
             element={
@@ -47,6 +57,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/project-guide"
             element={
@@ -55,6 +66,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/songs"
             element={
@@ -111,7 +123,9 @@ function App() {
         </Route>
 
         <Route path="/login" element={<Login />} />
+
         <Route path="/register" element={<Register />} />
+
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
